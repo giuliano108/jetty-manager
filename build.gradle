@@ -1,0 +1,60 @@
+apply plugin: 'java'
+apply plugin: 'application'
+apply plugin: 'os-package'
+
+mainClassName = "bz._108.JettyManager"
+
+sourceCompatibility = 1.5
+version = '1.0'
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    extraLibs
+}
+    
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'com.netflix.nebula:gradle-ospackage-plugin:1.10.0'
+    }
+}
+
+dependencies {
+    extraLibs files("../docopt.java/target/docopt-0.6.0-SNAPSHOT.jar")
+    configurations.compile.extendsFrom(configurations.extraLibs)
+    compile files("${System.getProperty('java.home')}/lib/tools.jar")
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': project.mainClassName
+    }
+}
+
+jar {
+    into('') {
+        from configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+task createRpm(type: Rpm) {
+    packageName = "jetty-manager"
+    version = "1.0"
+    release = "1"
+    arch = NOARCH
+    os = LINUX
+    user = "root"
+
+    from(jar.outputs.files) {
+        into '/usr/share/jetty-manager'
+    }
+    from('jetty-manager') {
+        into '/usr/bin'
+    }
+}

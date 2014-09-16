@@ -1,0 +1,23 @@
+#!/bin/bash
+
+JM_JAR_LOCATION="/usr/share/jetty-manager/jetty-manager-1.0.jar"
+if ! [ -e "$JM_JAR_LOCATION" ]; then # fallback to the local development jar
+    JM_JAR_LOCATION="./build/libs/jetty-manager-1.0.jar"
+fi
+
+case "`uname`" in
+    Darwin*)
+        JH="$(/usr/libexec/java_home)"
+        TOOLS_JAR_LOCATION="$JH/lib/tools.jar"
+        ;;
+    *) 
+        JH="$(readlink -f "$(dirname $(readlink /etc/alternatives/java))"/..)"
+        TOOLS_JAR_LOCATION="$JH/lib/tools.jar"
+        ;;
+esac
+
+if ! [ -e "$TOOLS_JAR_LOCATION" ]; then
+    echo "Cannot find \"tools.jar\" under the \$JAVA_HOME \"$JH\""
+fi
+
+java -cp "$TOOLS_JAR_LOCATION:$JM_JAR_LOCATION" bz._108.JettyManager $*
